@@ -16,7 +16,7 @@ D = RAIN_DROP = (0, 10, 255)
 class Drop:
 
     min_speed = 4
-    max_speed = 10
+    max_speed = 8
 
     def __init__(self, col, tick_total, dim=8):
         self.row = -1
@@ -40,10 +40,13 @@ class Drop:
                 arr[self.row][self.col] = self.rain
         return arr, None
 
+    def destroy(self, arr):
+        return arr
+
 class Cloud:
 
-    min_speed = 4
-    max_speed = 10
+    min_speed = 5
+    max_speed = 11
 
     def __init__(self, tick_total, upper=1, dim=8):
         self.tick_count = tick_total
@@ -86,10 +89,14 @@ class Cloud:
             arr[self.lower][col] = self.cloud
         return arr
 
+    def destroy(self, arr):
+        return arr
+
+
 class Lightning:
 
-    min_speed = 7
-    max_speed = 12
+    min_speed = 1
+    max_speed = 4
 
     def __init__(self, tick_total, row, col, dim=8):
         self.tick_count = tick_total
@@ -100,6 +107,12 @@ class Lightning:
         
         self.row = row
         self.col = col
+
+        self.row_prev = row
+        self.col_prev = col
+
+        self.row_prev2 = row
+        self.col_prev2 = col
 
     def take_step(self, arr):
         self.tick_count -= 1
@@ -128,8 +141,14 @@ class Lightning:
         else:
             col_delta = -1
         
-        arr = self.deblot(self.row, self.col, arr)
+        arr = self.deblot(self.row_prev2, self.col_prev2, arr)
         
+        self.row_prev2 = self.row_prev
+        self.col_prev2 = self.col_prev
+
+        self.row_prev = self.row
+        self.col_prev = self.col
+
         self.row += row_delta
         self.col += col_delta
         
@@ -138,15 +157,20 @@ class Lightning:
         return arr
 
     def deblot(self, row, col, arr):
-        if row >= 0 and row < self.dim:
+        if row >= 0 and row < self.dim and col >= 0 and col < self.dim:
             arr[row][col] = self.blank
         return arr
     
     def enbolt(self, row, col, arr):
-        if row >= 0 and row < self.dim:
+        if row >= 0 and row < self.dim and col >= 0 and col < self.dim:
             arr[row][col] = self.yellow
         return arr
-        
+
+    def destroy(self, arr):
+        arr = self.deblot(self.row, self.col, arr)
+        arr = self.deblot(self.row_prev, self.col_prev, arr)
+        arr = self.deblot(self.row_prev2, self.col_prev2, arr)
+        return arr
 
 
 class Rain:
@@ -211,6 +235,8 @@ class Rain:
             self.arr, x = drop.take_step(self.arr)
             if x != 'splash':
                 next_drops.append(drop)
+            else:
+                self.arr = drop.destroy(self.arr)
         self.drops = next_drops
 
         next_clouds = []
@@ -218,6 +244,8 @@ class Rain:
             self.arr, x = cloud.take_step(self.arr)
             if x != 'poof':
                 next_clouds.append(cloud)
+            else:
+                self.arr = cloud.destroy(self.arr)
         self.clouds = next_clouds
 
         next_lightninigs = []
@@ -225,6 +253,8 @@ class Rain:
             self.arr, x = lightning.take_step(self.arr)
             if x != 'zapp':
                 next_lightninigs.append(lightning)
+            else:
+                self.arr = lightning.destroy(self.arr)
         self.lightnings = next_lightninigs
 
     def run(self, steps, tick_duration=0.1):
@@ -242,5 +272,6 @@ class Rain:
 
 if __name__ == '__main__':
     rain = Rain()
-    rain.run(steps=500, tick_duration=0.05)
+    # rain.hat.show_message("LET IT RAIN!", text_colour=[255, 75, 0])
+    rain.run(steps=1000, tick_duration=0.05)
     rain.hat.clear()
