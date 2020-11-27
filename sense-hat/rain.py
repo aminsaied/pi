@@ -260,7 +260,7 @@ class Rain:
     def run(self, steps, tick_duration=0.1):
         self.set_tick_duration(tick_duration)
         for _ in range(steps):
-            if np.random.rand() < 0.15:
+            if np.random.rand() < 0.12:
                 self.random_drop()
             if np.random.rand() < 0.01:
                 self.random_cloud()
