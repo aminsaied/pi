@@ -1,5 +1,6 @@
 '''Some 8x8 pixel art.
 '''
+import numpy as np
 
 class Special:
     o = (255,103,0)
@@ -17,6 +18,11 @@ class Special:
         w, w, o, o, o, o, w, w,
     ]
 
+    @staticmethod
+    def random():
+        random_rgb = lambda : (np.random.randint(0, 256), np.random.randint(0, 256), np.random.randint(0, 256))
+        arr = [random_rgb() for _ in range(64)]
+        return arr
 
 class Face:
     y = (250,250,55)
@@ -109,3 +115,38 @@ class Animal:
         p, p, s, s, s, s, p, p,
         w, p, p, p, p, p, p, w,
     ]
+
+if __name__ == '__main__':
+
+    from sense_emu import SenseHat
+    import time
+
+    hat = SenseHat()
+    epsilon = 0.5
+
+    # faces
+    hat.set_pixels(Face.happy)
+    time.sleep(epsilon)
+    hat.set_pixels(Face.sad)
+    time.sleep(epsilon)
+    hat.set_pixels(Face.wink_left)
+    time.sleep(epsilon)
+    hat.set_pixels(Face.blink)
+    time.sleep(epsilon)
+    hat.set_pixels(Face.wink_right)
+    time.sleep(epsilon)
+    hat.set_pixels(Face.shocked)
+    time.sleep(epsilon)
+    hat.set_pixels(Face.cross)
+    time.sleep(epsilon)
+
+    # animals
+    hat.set_pixels(Animal.pig)
+    time.sleep(epsilon)
+
+    # special
+    hat.set_pixels(Special.pumpkin)
+    time.sleep(epsilon)
+    for _ in range(5):
+        hat.set_pixels(Special.random())
+        time.sleep(epsilon)
