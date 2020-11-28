@@ -73,7 +73,7 @@ class Maze:
         self.hat.set_pixels(Face.wink_left)
         time.sleep(0.25)
         self.hat.set_pixels(Face.happy)
-
+        time.sleep(1)
 
     def move_ball(self, direction):
 
@@ -114,7 +114,6 @@ class Maze:
                 self.done = True
         
         self.celebrate_win()
-        self.hat.clear()
 
 
 if __name__ == '__main__':
