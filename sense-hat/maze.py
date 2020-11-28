@@ -1,7 +1,7 @@
 from sense_emu import SenseHat
 import time
 import numpy as np
-from art import Special
+from art import Special, Face
 
 class Point:
     def __init__(self, x, y):
@@ -64,9 +64,16 @@ class Maze:
             time.sleep(0.25)
         self.hat.show_message(
             text_string='WIN',
+            scroll_speed=0.2,
             text_colour=(0, 0, 255),
             back_colour=(255, 255, 255),
         )
+        self.hat.set_pixels(Face.happy)
+        time.sleep(1)
+        self.hat.set_pixels(Face.wink_left)
+        time.sleep(0.25)
+        self.hat.set_pixels(Face.happy)
+
 
     def move_ball(self, direction):
 
