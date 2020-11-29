@@ -1,4 +1,7 @@
-from sense_emu import SenseHat
+try:
+    from sense_hat import SenseHat
+except ImportError:
+    from sense_emu import SenseHat
 import time
 import numpy as np
 from art import Special, Face

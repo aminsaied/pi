@@ -1,6 +1,9 @@
 '''Take picture with camera module and convert to sense hat's 8x8 light grid.
 '''
-from sense_emu import SenseHat
+try:
+    from sense_hat import SenseHat
+except ImportError:
+    from sense_emu import SenseHat
 import time
 from PIL import Image
 import os
