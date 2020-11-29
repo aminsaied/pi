@@ -275,6 +275,5 @@ class Rain:
 
 if __name__ == '__main__':
     rain = Rain()
-    # rain.hat.show_message("LET IT RAIN!", text_colour=[255, 75, 0])
     rain.run(steps=1000, tick_duration=0.05)
     rain.hat.clear()
