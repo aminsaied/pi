@@ -118,35 +118,43 @@ class Animal:
 
 if __name__ == '__main__':
 
-    from sense_emu import SenseHat
+    try:
+        from sense_hat import SenseHat
+    except ImportError:
+        from sense_emu import SenseHat
     import time
 
     hat = SenseHat()
     epsilon = 0.5
 
-    # faces
-    hat.set_pixels(Face.happy)
-    time.sleep(epsilon)
-    hat.set_pixels(Face.sad)
-    time.sleep(epsilon)
-    hat.set_pixels(Face.wink_left)
-    time.sleep(epsilon)
-    hat.set_pixels(Face.blink)
-    time.sleep(epsilon)
-    hat.set_pixels(Face.wink_right)
-    time.sleep(epsilon)
-    hat.set_pixels(Face.shocked)
-    time.sleep(epsilon)
-    hat.set_pixels(Face.cross)
-    time.sleep(epsilon)
+    images = [
+        Face.happy,
+        Face.sad,
+        Face.wink_left,
+        Face.wink_right,
+        Face.blink,
+        Face.shocked,
+        Face.cross,
+        Animal.pig,
+        Special.pumpkin,
+        Special.random(),
+        Special.random(),
+    ]
 
-    # animals
-    hat.set_pixels(Animal.pig)
-    time.sleep(epsilon)
+    count = 0
+    N = len(images)
+    while True:
 
-    # special
-    hat.set_pixels(Special.pumpkin)
-    time.sleep(epsilon)
-    for _ in range(5):
-        hat.set_pixels(Special.random())
-        time.sleep(epsilon)
+        image = images[count]
+        hat.set_pixels(image)
+
+        # read joystick input
+        action = None
+        while action not in ['pressed', 'held']:
+            event = hat.stick.wait_for_event(emptybuffer=True)
+            action = event.action
+
+        if event.direction == 'left':
+            count = (count - 1) % N
+        else:
+            count = (count + 1) % N
