@@ -65,16 +65,10 @@ class Maze:
         for _ in range(10):
             self.hat.set_pixels(Special.random())
             time.sleep(0.25)
-        self.hat.show_message(
-            text_string='WIN',
-            scroll_speed=0.2,
-            text_colour=(0, 0, 255),
-            back_colour=(255, 255, 255),
-        )
         self.hat.set_pixels(Face.happy)
         time.sleep(1)
         self.hat.set_pixels(Face.wink_left)
-        time.sleep(0.25)
+        time.sleep(0.3)
         self.hat.set_pixels(Face.happy)
         time.sleep(1)
 
@@ -141,4 +135,53 @@ if __name__ == '__main__':
     )
     
     maze = Maze(layout=layout)
+    maze.hat.low_light = True
+    maze.run()
+
+    arr = np.array([
+        [1, 1, 1, 1, 1, 1, 1, 1,],
+        [0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 1, 1, 1, 1, 0, 1, 0,],
+        [0, 0, 0, 0, 0, 0, 1, 0,],
+        [0, 1, 1, 1, 1, 1, 1, 1,],
+        [0, 1, 0, 0, 0, 1, 0, 0,],
+        [0, 1, 0, 1, 0, 1, 0, 1,],
+        [0, 0, 0, 1, 0, 0, 0, 1,],
+    ])
+    start = (5, 7)
+    end = (3, 7)
+
+    layout = Layout(
+        arr=arr,
+        start=start,
+        end=end,
+    )
+
+    maze = Maze(layout=layout)
+    maze.hat.low_light = True
+    maze.run()
+
+    maze.hat.clear()
+
+    arr = np.array([
+        [0, 0, 0, 1, 1, 0, 0, 0,],
+        [0, 1, 0, 0, 0, 0, 1, 0,],
+        [0, 1, 1, 1, 1, 1, 1, 1,],
+        [0, 1, 0, 1, 0, 0, 0, 1,],
+        [0, 1, 0, 1, 0, 1, 0, 1,],
+        [0, 1, 0, 1, 1, 1, 0, 1,],
+        [0, 0, 0, 0, 0, 0, 0, 1,],
+        [1, 1, 1, 1, 1, 1, 1, 1,],
+    ]).T
+    start = (4, 4)
+    end = (7, 1)
+
+    layout = Layout(
+        arr=arr,
+        start=start,
+        end=end,
+    )
+    
+    maze = Maze(layout=layout)
+    maze.hat.low_light = True
     maze.run()
