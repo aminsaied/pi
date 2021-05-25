@@ -2,7 +2,6 @@ import queue
 from typing import Tuple, Set
 
 import numpy as np
-from numpy.core.fromnumeric import shape, sort
 
 class Graph:
     def __init__(self, vertices: Set, edges: Set[Tuple]):
@@ -80,33 +79,21 @@ class Graph:
         _, m = arr.shape
         return i * m + j
 
+    @staticmethod
+    def point_to_vertex(point, arr):
+        _, m = arr.shape
+        return point.x * m + point.y
+
     @classmethod
     def is_solvable_from_array(cls, arr, start, end):
         graph = cls.from_maze_array(arr)
-        start_vertex = cls.coordinate_to_vertex(start, arr)
-        end_vertex = cls.coordinate_to_vertex(end, arr)
+        start_vertex = cls.point_to_vertex(start, arr)
+        end_vertex = cls.point_to_vertex(end, arr)
         return graph.is_solvable(start_vertex, end_vertex)
 
 
-def build_random_solvable_maze():
-    n = 8
-    arr = np.zeros((n, n))
-    start = (0, 0)
-    end = (n - 1, n - 1)
-
-
-    while Graph.is_solvable_from_array(arr, start, end):
-        i, j = np.random.randint(0, 8, 2)
-        if (i == 0 and j == 0) or (i == n and j == n):
-            continue
-        arr[i, j] = (arr[i, j] + 1) % 2
-
-    arr[i, j] = 0
-    print(arr)
-    print(Graph.is_solvable_from_array(arr, start, end))
-
 if __name__ == "__main__":
-
+    
     # example
     arr = np.array([
         [0, 0, 0, 0],
@@ -117,19 +104,8 @@ if __name__ == "__main__":
     start = (0, 0)
     end = (0, 3)
 
-    # print(Graph.is_solvable_from_array(arr=arr, start=start, end=end))
+    graph = Graph.from_maze_array(arr)
 
-    build_random_solvable_maze()
-
-    # def coordinate_to_vertex(coordinate, arr):
-    #     i, j = coordinate
-    #     _, m = arr.shape
-    #     return i * m + j
-
-    # graph = Graph.from_maze_array(arr)
-    # # print(graph.vertices)
-    # # print(graph.edges)
-    
-    # start_vertex = coordinate_to_vertex(start, arr)
-    # end_vertex = coordinate_to_vertex(end, arr)
-    # print(graph.is_solvable(start_vertex, end_vertex))
+    start_vertex = graph.coordinate_to_vertex(start, arr)
+    end_vertex = graph.coordinate_to_vertex(end, arr)
+    print(graph.is_solvable(start_vertex, end_vertex))
