@@ -1,15 +1,31 @@
+import time
+from typing import Optional
+
+import numpy as np
+
 try:
     from sense_hat import SenseHat
 except ImportError:
     from sense_emu import SenseHat
-import time
-import numpy as np
+
 from art import Special, Face
+from maze_graph import Graph
+
+HAT_DIM = 8
 
 class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+
+    def __eq__(self, other_point):
+        return self.x == other_point.x and self.y == other_point.y
+
+    @classmethod
+    def random(cls, max_x: int = HAT_DIM, max_y: int = HAT_DIM):
+        i = np.random.randint(max_x)
+        j = np.random.randint(max_y)
+        return cls(x=i, y=j)
 
 class Layout:
     def __init__(self, arr, start, end):
@@ -21,16 +37,68 @@ class Layout:
         if self.arr[x, y] == 0:
             return True
         return False
+
+    def set_layout(self, hat):
+        dim = len(self.arr)
+        for i in range(dim):
+            for j in range(dim):
+                if self.layout.arr[i][j] == 1:
+                    hat.set_pixel(i, j, self.wall_color)
+
+    @staticmethod
+    def point_to_vertex(point, arr):
+        _, m = arr.shape
+        return point.x * m + point.y
+
+    def is_solvable_from_array(arr, start, end):
+        graph = Graph.from_maze_array(arr)
+        start_vertex = Graph.point_to_vertex(start, arr)
+        end_vertex = Graph.point_to_vertex(end, arr)
+        return graph.is_solvable(start_vertex, end_vertex)
+
+    @classmethod
+    def generate_random_layout(
+        cls,
+        hat: SenseHat,
+        initial_arr: Optional[np.array] = None,
+        start: Optional[Point] = None,
+        end: Optional[Point] = None,
+        ):
+        """Generates random solvable layout based on initial starting array."""
+        n = HAT_DIM
+        arr = initial_arr if initial_arr is not None else np.zeros((n, n))
+        start = Point(0, 0) if start is None else start
+        end = Point(n - 1, n - 1) if end is None else end
+
+        layout = cls(arr=arr, start=start, end=end)
+        layout.set_layout(hat)
+
+        while Graph.is_solvable_from_array(arr=arr, start=start, end=end):
+            r = Point.random()
+            if r == start or r == end:
+                continue
+            arr[r.x, r.y] = (arr[r.x, r.y] + 1) % 2
+
+            layout = cls(arr=arr, start=start, end=end)
+            layout.set_layout(hat)
+
+        # remove last point
+        arr[r.x, r.y] = 0
+        layout = cls(arr=arr, start=start, end=end)
+        layout.set_layout(hat)
         
 
 class Maze:
 
-    def __init__(self, layout: Layout, dim: int=8):
+    def __init__(self, layout: Layout, hat: Optional[SenseHat] = None, dim: int = 8):
         self.dim = dim
 
         # prep hat
-        self.hat = SenseHat()
-        self.hat.clear()
+        if hat is None:
+            self.hat = SenseHat()
+            self.hat.clear()
+        else:
+            self.hat = hat
 
         # set maze colors
         self.ball_color = (255, 0, 0)
