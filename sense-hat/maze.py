@@ -1,3 +1,4 @@
+import random
 import time
 from typing import Optional
 
@@ -12,6 +13,11 @@ from art import Special, Face
 from maze_graph import Graph
 
 HAT_DIM = 8
+# set maze colors
+BALL_COLOR = (255, 0, 0)
+TARGET_COLOR = (0, 255, 0)
+BACKGROUND_COLOR = (0, 0, 0)
+WALL_COLOR = (255, 255, 255)
 
 class Point:
     def __init__(self, x, y):
@@ -20,6 +26,12 @@ class Point:
 
     def __eq__(self, other_point):
         return self.x == other_point.x and self.y == other_point.y
+
+    def __getitem__(self, index):
+        if index == 0:
+            return self.x
+        elif index == 1:
+            return self.y
 
     @classmethod
     def random(cls, max_x: int = HAT_DIM, max_y: int = HAT_DIM):
@@ -38,12 +50,14 @@ class Layout:
             return True
         return False
 
-    def set_layout(self, hat):
+    def set_layout(self, hat, wall_color=WALL_COLOR, background_color=BACKGROUND_COLOR):
         dim = len(self.arr)
         for i in range(dim):
             for j in range(dim):
-                if self.layout.arr[i][j] == 1:
-                    hat.set_pixel(i, j, self.wall_color)
+                if self.arr[i][j] == 1:
+                    hat.set_pixel(i, j, wall_color)
+                else:
+                    hat.set_pixel(i, j, background_color)
 
     @staticmethod
     def point_to_vertex(point, arr):
@@ -60,32 +74,41 @@ class Layout:
     def generate_random_layout(
         cls,
         hat: SenseHat,
-        initial_arr: Optional[np.array] = None,
-        start: Optional[Point] = None,
-        end: Optional[Point] = None,
+        initial_layout: Optional["Layout"] = None,
+        patience: Optional[int] = 5,
+        is_additive: bool = True,
         ):
         """Generates random solvable layout based on initial starting array."""
-        n = HAT_DIM
-        arr = initial_arr if initial_arr is not None else np.zeros((n, n))
-        start = Point(0, 0) if start is None else start
-        end = Point(n - 1, n - 1) if end is None else end
+        if initial_layout is None:
+            n = HAT_DIM
+            arr = np.zeros((n, n))
+            start = Point(0, 0)
+            end = Point(n - 1, n - 1)
+            layout = cls(arr=arr, start=start, end=end)
+        else:
+            layout = initial_layout
 
-        layout = cls(arr=arr, start=start, end=end)
         layout.set_layout(hat)
 
-        while Graph.is_solvable_from_array(arr=arr, start=start, end=end):
-            r = Point.random()
-            if r == start or r == end:
-                continue
-            arr[r.x, r.y] = (arr[r.x, r.y] + 1) % 2
+        start_time = time.time()
 
-            layout = cls(arr=arr, start=start, end=end)
+        while time.time() - start_time < patience:
+            while Graph.is_solvable_from_array(arr=layout.arr, start=layout.start, end=layout.end):
+                time.sleep(0.08)
+                r = Point.random()
+                if r == layout.start or r == layout.end:
+                    continue
+                if is_additive:    
+                    layout.arr[r.x, r.y] = 1
+                else:
+                    layout.arr[r.x, r.y] = (layout.arr[r.x, r.y] + 1) % 2
+                layout.set_layout(hat)
+
+            # remove last point
+            layout.arr[r.x, r.y] = 0
             layout.set_layout(hat)
 
-        # remove last point
-        arr[r.x, r.y] = 0
-        layout = cls(arr=arr, start=start, end=end)
-        layout.set_layout(hat)
+        return layout
         
 
 class Maze:
@@ -101,10 +124,10 @@ class Maze:
             self.hat = hat
 
         # set maze colors
-        self.ball_color = (255, 0, 0)
-        self.target_color = (0, 255, 0)
-        self.background_color = (0, 0, 0)
-        self.wall_color = (255, 255, 255)
+        self.ball_color = BALL_COLOR
+        self.target_color = TARGET_COLOR
+        self.background_color = BACKGROUND_COLOR
+        self.wall_color = WALL_COLOR
 
         # set the layout of the maze
         self.layout = layout
@@ -180,9 +203,8 @@ class Maze:
         
         self.celebrate_win()
 
-
-if __name__ == '__main__':
-    
+def initial_layouts():
+    layouts = []
     arr = np.array([
         [1, 1, 1, 1, 1, 1, 1, 1,],
         [0, 0, 0, 0, 0, 0, 0, 0,],
@@ -201,10 +223,7 @@ if __name__ == '__main__':
         start=start,
         end=end,
     )
-    
-    maze = Maze(layout=layout)
-    maze.hat.low_light = True
-    maze.run()
+    layouts.append(layout)
 
     arr = np.array([
         [1, 1, 1, 1, 1, 1, 1, 1,],
@@ -224,32 +243,44 @@ if __name__ == '__main__':
         start=start,
         end=end,
     )
+    layouts.append(layout)
 
-    maze = Maze(layout=layout)
-    maze.hat.low_light = True
-    maze.run()
+    return layouts
 
-    maze.hat.clear()
+if __name__ == '__main__':
 
-    arr = np.array([
-        [0, 0, 0, 1, 1, 0, 0, 0,],
-        [0, 1, 0, 0, 0, 0, 1, 0,],
-        [0, 1, 1, 1, 1, 1, 1, 1,],
-        [0, 1, 0, 1, 0, 0, 0, 1,],
-        [0, 1, 0, 1, 0, 1, 0, 1,],
-        [0, 1, 0, 1, 1, 1, 0, 1,],
-        [0, 0, 0, 0, 0, 0, 0, 1,],
-        [1, 1, 1, 1, 1, 1, 1, 1,],
-    ]).T
-    start = (4, 4)
-    end = (7, 1)
+    hat = SenseHat()
+    hat.clear()
 
-    layout = Layout(
-        arr=arr,
-        start=start,
-        end=end,
-    )
-    
-    maze = Maze(layout=layout)
-    maze.hat.low_light = True
-    maze.run()
+    score = 9
+
+    layouts = initial_layouts()
+
+    while True:
+
+        if np.random.rand() < 0.7:
+            layout = Layout.generate_random_layout(
+                hat=hat,
+                patience=score,
+                )
+        else:
+            initial_layout = random.choice(layouts)
+            layout = Layout.generate_random_layout(
+                hat=hat,
+                initial_layout=initial_layout,
+                patience=min(score, 5),
+                is_additive=False,
+                )
+        
+        maze = Maze(layout=layout)
+        maze.hat.low_light = True
+        maze.run()
+        hat.clear()
+        
+        score += 1
+        if len(str(score)) == 1:
+            hat.show_letter(str(score))
+        else:
+            hat.show_message(text_string=str(score))
+        
+        time.sleep(1)
