@@ -204,71 +204,53 @@ class Maze:
         self.celebrate_win()
 
 def initial_layouts():
+    """Some intial layouts designed to make interesting random mazes."""
     layouts = []
-    arr = np.array([
-        [1, 1, 1, 1, 1, 1, 1, 1,],
-        [0, 0, 0, 0, 0, 0, 0, 0,],
-        [1, 1, 1, 1, 1, 1, 1, 0,],
-        [0, 0, 0, 0, 0, 0, 0, 0,],
-        [0, 1, 1, 1, 1, 1, 1, 1,],
-        [0, 1, 0, 0, 0, 1, 0, 0,],
-        [0, 1, 0, 1, 0, 1, 0, 1,],
-        [0, 0, 0, 1, 0, 0, 0, 1,],
-    ]).T
-    start = (0, 1)
-    end = (7, 5)
-
-    layout = Layout(
-        arr=arr,
-        start=start,
-        end=end,
-    )
-    layouts.append(layout)
-
-    arr = np.array([
-        [1, 1, 1, 1, 1, 1, 1, 1,],
-        [0, 0, 0, 0, 0, 0, 0, 0,],
-        [0, 1, 1, 1, 1, 0, 1, 0,],
-        [0, 0, 0, 0, 0, 0, 1, 0,],
-        [0, 1, 1, 1, 1, 1, 1, 1,],
-        [0, 1, 0, 0, 0, 1, 0, 0,],
-        [0, 1, 0, 1, 0, 1, 0, 1,],
-        [0, 0, 0, 1, 0, 0, 0, 1,],
-    ])
-    start = (5, 7)
-    end = (3, 7)
-
-    layout = Layout(
-        arr=arr,
-        start=start,
-        end=end,
-    )
+    arr = np.zeros((8, 8))
+    for i in range(8):
+        for j in range(8):
+            if (i % 2 == 0) and ((i + j) % 2 == 1):
+                arr[i, j] = 1
+    start = (0, 0)
+    end = (7, 7)
+    layout = Layout(arr=arr, start=start, end=end)
     layouts.append(layout)
 
     return layouts
+
+def show_score(score, hat):
+        score += 1
+        if len(str(score)) == 1:
+            hat.show_letter(str(score))
+        else:
+            hat.show_message(text_string=str(score))
+        time.sleep(1)
 
 if __name__ == '__main__':
 
     hat = SenseHat()
     hat.clear()
 
-    score = 9
+    score = 0
+    epsilon = 0.25
 
     layouts = initial_layouts()
 
     while True:
 
-        if np.random.rand() < 0.7:
+        if np.random.rand() < 0.5:
+            # start from blank
             layout = Layout.generate_random_layout(
                 hat=hat,
-                patience=score,
+                patience=score * epsilon,
                 )
         else:
+            # start from initial layout
             initial_layout = random.choice(layouts)
             layout = Layout.generate_random_layout(
                 hat=hat,
                 initial_layout=initial_layout,
-                patience=min(score, 5),
+                patience=score * epsilon,
                 is_additive=False,
                 )
         
@@ -277,10 +259,4 @@ if __name__ == '__main__':
         maze.run()
         hat.clear()
         
-        score += 1
-        if len(str(score)) == 1:
-            hat.show_letter(str(score))
-        else:
-            hat.show_message(text_string=str(score))
-        
-        time.sleep(1)
+        show_score(score=score, hat=hat)
