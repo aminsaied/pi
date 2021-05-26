@@ -75,7 +75,7 @@ class Layout:
         cls,
         hat: SenseHat,
         initial_layout: Optional["Layout"] = None,
-        patience: Optional[int] = 5,
+        patience: Optional[float] = 5,
         is_additive: bool = True,
         ):
         """Generates random solvable layout based on initial starting array."""
@@ -92,7 +92,7 @@ class Layout:
 
         start_time = time.time()
 
-        while time.time() - start_time < patience:
+        while time.time() - start_time < max(patience, 0.01):
             while Graph.is_solvable_from_array(arr=layout.arr, start=layout.start, end=layout.end):
                 time.sleep(0.08)
                 r = Point.random()
@@ -259,4 +259,5 @@ if __name__ == '__main__':
         maze.run()
         hat.clear()
         
+        score += 1
         show_score(score=score, hat=hat)
